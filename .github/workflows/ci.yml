@@ -2,7 +2,7 @@
 #   1. unit tests (SQL features, leakage guards, metrics, models, pricing,
 #      explainability, fairness, API)
 #   2. every stage end to end on synthetic sample data
-#   3. builds the Docker image and calls the running API
+#   3. runs the API, then builds the Docker image and calls the running container
 # The real Kaggle data is never needed here.
 
 name: CI
@@ -16,9 +16,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -46,6 +46,19 @@ jobs:
           python -m src.build_serving --sample
           python -m src.monitor --simulate --sample
 
+      - name: Call the API without Docker (checks the code path)
+        run: |
+          MODEL_PATH=models/serving_bundle_sample.joblib SCORE_LOG=logs/ci.jsonl \
+            uvicorn src.api:app --port 8001 > uvicorn.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8001/health; then echo; echo "API is up"; break; fi
+            sleep 2
+          done
+          cat uvicorn.log
+          curl -sf http://127.0.0.1:8001/example -o example.json
+          curl -sf -X POST http://127.0.0.1:8001/score -H "Content-Type: application/json" -d @example.json
+          echo
+
       - name: Build the Docker image
         run: >
           docker build --build-arg PYTHON_VERSION=3.12
@@ -54,7 +67,17 @@ jobs:
       - name: Run the container and call the API
         run: |
           docker run -d -p 8000:8000 --name api credit-risk-api
-          for i in $(seq 1 30); do curl -sf http://localhost:8000/health && break; sleep 2; done
-          curl -sf http://localhost:8000/example -o example.json
-          curl -sf -X POST http://localhost:8000/score -H "Content-Type: application/json" -d @example.json
-          docker logs api
+          for i in $(seq 1 45); do
+            if curl -sf http://127.0.0.1:8000/health; then echo; echo "Container API is up"; break; fi
+            if [ "$(docker inspect -f '{{.State.Running}}' api)" != "true" ]; then
+              echo "The container stopped. Its logs:"; docker logs api; exit 1
+            fi
+            sleep 2
+          done
+          curl -sf http://127.0.0.1:8000/example -o example.json
+          curl -sf -X POST http://127.0.0.1:8000/score -H "Content-Type: application/json" -d @example.json
+          echo
+
+      - name: Container logs (always shown, for debugging)
+        if: always()
+        run: docker logs api || echo "No container was started."
