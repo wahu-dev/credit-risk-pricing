@@ -51,13 +51,24 @@ _To be summarised here after the full run._
 
 Champion vs scorecard on 61,503 held-out applicants: **+0.036 AUC** (95% CI +0.032 to +0.040).
 
+## Pricing results (stage 3)
+
+Risk-based price grid, checked on 30,752 applicants it never saw: every approved band lands close to its 3% target margin.
+
+![Band margins](reports/pricing/band_margins.png)
+
+At the same price and 80% approval, the champion approves a portfolio with a 4.58% default rate vs 5.26% for the scorecard: 54 fewer defaults and about 17 million more profit per 10,000 applications.
+
+![Profit vs approval](reports/pricing/profit_vs_approval.png)
+
 ## Roadmap
 
 1. ✅ SQL features, validation, interpretable baseline
 2. ✅ Gradient boosting + stacking, Optuna tuning, MLflow tracking, calibration
-3. Risk-based pricing grid and profit-vs-approval curve; champion vs challenger Bayesian A/B test
-4. SHAP reasons, fairness report, model card
-5. FastAPI scoring service, Docker, monitoring (PSI)
+3. ✅ Calibration, risk-based pricing grid and profit-vs-approval curve
+4. Champion vs challenger Bayesian A/B test
+5. SHAP reasons, fairness report, model card
+6. FastAPI scoring service, Docker, monitoring (PSI)
 
 ## How to run
 

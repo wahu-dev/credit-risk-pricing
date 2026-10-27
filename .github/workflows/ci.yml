@@ -32,3 +32,6 @@ jobs:
 
       - name: Stage 2 smoke test (quick tuning on synthetic data)
         run: python -m src.train_models --sample --quick --no-tracking
+
+      - name: Stage 3 smoke test (calibration and pricing on synthetic data)
+        run: python -m src.price_loans --sample --no-tracking

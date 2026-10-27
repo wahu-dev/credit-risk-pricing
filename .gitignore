@@ -16,6 +16,9 @@ reports/sample/
 reports/investigation/
 reports/models/
 reports/models_sample/
+reports/pricing_sample/
+reports/pricing/*.csv
+reports/pricing/*.json
 
 # Fitted models and experiment-tracking store (re-created by training)
 models/

@@ -66,9 +66,9 @@ class CategoryEncoder:
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         out = df.copy()
         for col in self.columns:
-            values = df[col].astype("object").where(df[col].notna(), None)
-            codes = pd.Categorical(
-                [None if v is None else str(v) for v in values], categories=self.categories_[col]
-            ).codes
-            out[col] = codes.astype("int32")
+            # Explicit lookup: unseen or missing values map to -1 directly
+            # (pandas is deprecating silent handling of unseen categories).
+            mapping = {value: code for code, value in enumerate(self.categories_[col])}
+            out[col] = [mapping.get(str(v), -1) if pd.notna(v) else -1 for v in df[col]]
+            out[col] = out[col].astype("int32")
         return out

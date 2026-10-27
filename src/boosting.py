@@ -11,6 +11,7 @@ Design choices worth defending:
 """
 from __future__ import annotations
 
+import inspect
 import logging
 from typing import Callable
 
@@ -65,14 +66,24 @@ def make_model(kind: str, params: dict, n_estimators: int, seed: int, early_stop
     raise ValueError(f"Unknown model kind: {kind}")
 
 
+def _lightgbm_eval_args(X_va, y_va) -> dict:
+    """Newer LightGBM takes eval_X / eval_y and deprecates eval_set; older
+    versions only know eval_set. Use whichever this installed version supports.
+    (Our labels are 0/1, so the known eval_y label-encoding issue does not apply.)"""
+    if "eval_X" in inspect.signature(lgb.LGBMClassifier.fit).parameters:
+        return {"eval_X": X_va, "eval_y": y_va}
+    return {"eval_set": [(X_va, y_va)]}
+
+
 def fit_with_early_stopping(kind, params, X_tr, y_tr, X_va, y_va, seed, max_estimators, patience):
     """Fit with early stopping on the validation set.
     Returns (model, number_of_trees_at_best_validation_score)."""
     if kind == "lightgbm":
         model = make_model(kind, params, max_estimators, seed)
         model.fit(
-            X_tr, y_tr, eval_set=[(X_va, y_va)], eval_metric="auc",
+            X_tr, y_tr, eval_metric="auc",
             callbacks=[lgb.early_stopping(patience, verbose=False)],
+            **_lightgbm_eval_args(X_va, y_va),
         )
         best = model.best_iteration_ or max_estimators
     else:
