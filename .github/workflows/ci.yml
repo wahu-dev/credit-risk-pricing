@@ -80,4 +80,11 @@ jobs:
 
       - name: Container logs (always shown, for debugging)
         if: always()
-        run: docker logs api || echo "No container was started."
+        run: |
+          docker ps -a || true
+          LOGS=$(docker logs api 2>&1 | tail -60 || true)
+          [ -z "$LOGS" ] && LOGS="No container output."
+          echo "$LOGS"
+          # Also publish the logs as an annotation on the run summary page
+          ESCAPED=$(printf '%s' "$LOGS" | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
+          echo "::warning title=Container logs::$ESCAPED"
