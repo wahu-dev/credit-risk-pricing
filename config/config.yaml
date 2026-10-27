@@ -25,6 +25,8 @@ features:
   # Kept OUT of the model on purpose (fairness + EU AI Act / GDPR).
   # They live in their own table and are used only for fairness checks.
   protected_attributes: [gender, age_years]
+  # Text columns, turned into integer codes for the tree models
+  categorical: [income_type, education_type]
 
 validation:
   max_missing_share: 0.95      # fail if a feature is >95% missing
@@ -54,5 +56,27 @@ baseline:
     inst_late_rate: positive
     inst_late_rate_365d: positive
     thin_file: positive
+
+# Stage 2: challenger models (LightGBM, XGBoost) and the stacked ensemble
+models:
+  n_folds: 5                    # out-of-fold predictions for stacking
+  bootstrap_samples: 300        # confidence interval for champion vs scorecard
+  models_dir: models            # fitted models (not committed to Git)
+  tuning:
+    n_trials: 20                # Optuna trials per model
+    timeout_seconds: 1200       # stop tuning a model after 20 minutes regardless
+    inner_valid_size: 0.2       # share of training data used to score each trial
+    early_stopping_rounds: 100
+    max_estimators: 3000
+  quick:                        # --quick overrides, to check the plumbing fast
+    n_trials: 3
+    n_folds: 3
+    max_estimators: 300
+    timeout_seconds: 300
+
+tracking:
+  enabled: true
+  experiment: credit-risk-stage2
+  db_path: mlflow.db
 
 reports_dir: reports

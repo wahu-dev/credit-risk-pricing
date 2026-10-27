@@ -46,12 +46,15 @@ _To be summarised here after the full run._
 
 | Model | ROC-AUC | Gini | KS | PR-AUC |
 | --- | --- | --- | --- | --- |
-| Baseline logit (13 features) | 0.740 | 0.479 | 0.360 | 0.221 |
+| **Champion: LightGBM + XGBoost average** | **0.776** | **0.551** | **0.419** | **0.262** |
+| Baseline scorecard (13 features) | 0.740 | 0.479 | 0.360 | 0.221 |
+
+Champion vs scorecard on 61,503 held-out applicants: **+0.036 AUC** (95% CI +0.032 to +0.040).
 
 ## Roadmap
 
 1. ✅ SQL features, validation, interpretable baseline
-2. Gradient boosting + stacking, Optuna tuning, MLflow tracking, calibration
+2. ✅ Gradient boosting + stacking, Optuna tuning, MLflow tracking, calibration
 3. Risk-based pricing grid and profit-vs-approval curve; champion vs challenger Bayesian A/B test
 4. SHAP reasons, fairness report, model card
 5. FastAPI scoring service, Docker, monitoring (PSI)

@@ -60,3 +60,26 @@ scores. All three external-score coefficients point the expected way; revisit if
 they become unstable.
 
 **Effect.** All 13 baseline coefficients now have the expected sign. Validation AUC 0.7416 -> 0.7395, KS 0.3594 -> 0.3604: a negligible change in exchange for a fully explainable scorecard.
+
+
+---
+
+## 2026-10-27 · Stage 2: gradient boosting vs the scorecard
+
+**Setup.** Same 61,503-applicant holdout as the scorecard, untouched until the end. LightGBM and XGBoost tuned with Optuna (20 trials each, inner validation split, early stopping). Five-fold out-of-fold predictions for a stacked ensemble. Champion chosen by cross-validated AUC, then reported on the holdout.
+
+| Model | CV AUC | Holdout AUC | Gini | KS | PR-AUC |
+| --- | --- | --- | --- | --- | --- |
+| Average of LightGBM + XGBoost | 0.7773 | 0.7757 | 0.551 | 0.419 | 0.262 |
+| Stacked ensemble | 0.7773 | 0.7757 | 0.551 | 0.419 | 0.262 |
+| XGBoost | 0.7768 | 0.7753 | 0.551 | 0.417 | 0.262 |
+| LightGBM | 0.7766 | 0.7749 | 0.550 | 0.417 | 0.260 |
+| Scorecard | 0.7388 | 0.7395 | 0.479 | 0.360 | 0.221 |
+
+**Findings.**
+- Champion beats the scorecard by +0.036 AUC (95% bootstrap CI +0.032 to +0.040, better in 100% of 300 resamples).
+- The scorecard reproduced its stage-1 holdout AUC exactly (0.7395): the comparison is like for like.
+- Stacking and simple averaging tied; the stacker gave the scorecard about zero weight (-0.03). Chose the simpler average.
+- `credit_to_annuity_ratio`, removed from the scorecard as non-linear, is the trees' 4th most important feature, confirming the stage-1 decision.
+
+**Decision.** Champion = equal-weight average of LightGBM and XGBoost. The scorecard stays as the explainable benchmark.

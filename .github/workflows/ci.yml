@@ -29,3 +29,6 @@ jobs:
 
       - name: End-to-end smoke test on synthetic data
         run: python -m src.pipeline --sample
+
+      - name: Stage 2 smoke test (quick tuning on synthetic data)
+        run: python -m src.train_models --sample --quick --no-tracking

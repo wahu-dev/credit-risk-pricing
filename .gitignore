@@ -12,6 +12,16 @@ data/
 reports/*.json
 reports/*.csv
 reports/*.txt
+reports/sample/
+reports/investigation/
+reports/models/
+reports/models_sample/
+
+# Fitted models and experiment-tracking store (re-created by training)
+models/
+mlflow.db
+mlruns/
+mlartifacts/
 !reports/.gitkeep
 
 # Python cache
@@ -25,4 +35,3 @@ __pycache__/
 .ipynb_checkpoints/
 Thumbs.db
 .DS_Store
-reports/sample/
