@@ -1,6 +1,8 @@
 # Runs on every push and pull request:
-#   1. unit tests (SQL features, leakage guards, metrics, validation, baseline)
-#   2. the full pipeline on synthetic sample data, as a smoke test
+#   1. unit tests (SQL features, leakage guards, metrics, models, pricing,
+#      explainability, fairness, API)
+#   2. every stage end to end on synthetic sample data
+#   3. builds the Docker image and calls the running API
 # The real Kaggle data is never needed here.
 
 name: CI
@@ -18,7 +20,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           cache: pip
 
       - name: Install dependencies
@@ -27,14 +29,32 @@ jobs:
       - name: Unit tests
         run: pytest
 
-      - name: End-to-end smoke test on synthetic data
+      - name: Stage 1 smoke test (SQL features, validation, baseline)
         run: python -m src.pipeline --sample
 
-      - name: Stage 2 smoke test (quick tuning on synthetic data)
+      - name: Stage 2 smoke test (quick tuning)
         run: python -m src.train_models --sample --quick --no-tracking
 
-      - name: Stage 3 smoke test (calibration and pricing on synthetic data)
+      - name: Stage 3 smoke test (calibration and pricing)
         run: python -m src.price_loans --sample --no-tracking
 
-      - name: Stage 4 smoke test (reason codes, fairness, model card on synthetic data)
+      - name: Stage 4 smoke test (reason codes, fairness, model card)
         run: python -m src.explain_and_audit --sample --no-tracking
+
+      - name: Stage 5 smoke test (serving bundle and drift monitoring)
+        run: |
+          python -m src.build_serving --sample
+          python -m src.monitor --simulate --sample
+
+      - name: Build the Docker image
+        run: >
+          docker build --build-arg PYTHON_VERSION=3.12
+          --build-arg BUNDLE=models/serving_bundle_sample.joblib -t credit-risk-api .
+
+      - name: Run the container and call the API
+        run: |
+          docker run -d -p 8000:8000 --name api credit-risk-api
+          for i in $(seq 1 30); do curl -sf http://localhost:8000/health && break; sleep 2; done
+          curl -sf http://localhost:8000/example -o example.json
+          curl -sf -X POST http://localhost:8000/score -H "Content-Type: application/json" -d @example.json
+          docker logs api

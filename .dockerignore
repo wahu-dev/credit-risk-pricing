@@ -1,0 +1,19 @@
+# Keep the image small and free of data and secrets: only src/, config/
+# and the serving bundle + its requirements are copied in.
+.venv/
+.git/
+.github/
+data/
+reports/
+docs/
+tests/
+logs/
+mlflow.db
+mlruns/
+mlartifacts/
+**/__pycache__/
+*.duckdb
+.env
+kaggle.json
+models/stage2_models*.joblib
+models/pricing*.joblib

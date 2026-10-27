@@ -85,23 +85,49 @@ def _fmt(value) -> str:
     return f"{value:.2f}"
 
 
+def _about_typical(value, typical, tolerance: float = 0.05) -> bool:
+    """True when the value rounds to the typical value or is within 5% of it."""
+    if pd.isna(typical):
+        return False
+    v, t = float(value), float(typical)
+    return _fmt(v) == _fmt(t) or abs(v - t) <= tolerance * max(abs(t), 1e-9)
+
+
+def binary_features(X: pd.DataFrame) -> set[str]:
+    """Numeric features whose known values are only 0 and 1 (yes/no flags)."""
+    out = set()
+    for col in X.select_dtypes(include=[np.number]).columns:
+        values = set(pd.unique(X[col].dropna()))
+        if values and values <= {0, 1}:
+            out.add(col)
+    return out
+
+
 def reason_codes(contrib: pd.DataFrame, X: pd.DataFrame, typical: pd.Series, labels: dict[str, str],
-                 top_k: int = 3, categories: dict[str, list[str]] | None = None) -> pd.DataFrame:
+                 top_k: int = 3, categories: dict[str, list[str]] | None = None,
+                 binary: set[str] | None = None) -> pd.DataFrame:
     """Top risk-increasing factors per applicant, in plain language.
 
     Only positive contributions count: a reason for a decline must be something
     that made the applicant look riskier. Each reason compares the applicant's
     value with the typical (median) value of the training population.
+
+    Factors where the applicant is about typical are skipped. SHAP measures a
+    push relative to the average *prediction*, so even median values get small
+    pushes; "your employment length is about typical" is not a usable reason
+    for a customer or a credit officer. An applicant with nothing unusual gets
+    no reasons, which is the honest answer.
     """
     categories = categories or {}
+    binary = binary or set()
     features = [c for c in contrib.columns if c != BASE]
     values = contrib[features].to_numpy()
     rows = []
     for i in range(len(contrib)):
         order = np.argsort(-values[i])
         reasons = []
-        for j in order[:top_k]:
-            if values[i, j] <= 0:
+        for j in order:
+            if values[i, j] <= 0 or len(reasons) == top_k:
                 break
             f = features[j]
             v = X.iloc[i][f]
@@ -112,11 +138,15 @@ def reason_codes(contrib: pd.DataFrame, X: pd.DataFrame, typical: pd.Series, lab
                 comparison = f"is '{name}'"
             elif pd.isna(v):
                 comparison = "is missing"
-            elif pd.notna(t) and float(v) != float(t):
-                comparison = f"is {'higher' if float(v) > float(t) else 'lower'} than typical ({_fmt(v)} vs {_fmt(t)})"
+            elif f in binary:
+                if pd.notna(t) and float(v) == round(float(t)):
+                    continue  # same as most applicants: not a reason
+                comparison = ": yes" if float(v) == 1 else ": no"
+            elif _about_typical(v, t):
+                continue
             else:
-                comparison = f"= {_fmt(v)}"
-            reasons.append(f"{readable(f, labels)} {comparison}")
+                comparison = f"is {'higher' if float(v) > float(t) else 'lower'} than typical ({_fmt(v)} vs {_fmt(t)})"
+            reasons.append(f"{readable(f, labels)}{'' if comparison.startswith(':') else ' '}{comparison}")
         row = {"row": contrib.index[i]}
         for k in range(top_k):
             row[f"reason_{k + 1}"] = reasons[k] if k < len(reasons) else ""

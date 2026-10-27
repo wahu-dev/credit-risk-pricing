@@ -129,3 +129,20 @@ they become unstable.
 - Do **not** adjust scores or prices using gender or age: that would make protected attributes pricing inputs.
 - Document the gaps in the model card and monitor them quarterly.
 - Next improvements: find which features act as proxies for the gaps, and add alternative data (e.g. mobile-money history) for thin-file young applicants.
+
+---
+
+## 2026-10-27 · Stage 5: scoring API, drift monitoring and Docker
+
+**Service.** FastAPI service returning PD, risk band, approve/decline, interest rate and top-3 reasons per applicant (`POST /score`, `POST /score/batch`, `GET /model-info`, `GET /example`, `GET /health`). It reuses the exact analysis code (encoder, champion, calibrator, price grid, TreeSHAP), and a test proves its PDs match the analysis pipeline. Unknown features and non-numeric values are rejected with a clear 422; missing count/flag features are filled with the typical value and reported back.
+
+**Packaging.** One versioned serving bundle (models, calibrator, price grid, labels, monitoring reference). The Docker image installs the exact library versions that trained the models (pickle compatibility), runs as a non-root user and has a health check. GitHub Actions builds the image and calls the running container on every push.
+
+**Monitoring.** Population Stability Index on the score and the 8 most influential features, against the validation population:
+
+| Scenario | Score PSI | Feature PSI | Mean PD | Approval rate |
+| --- | --- | --- | --- | --- |
+| Normal month | 0.001 (stable) | all ≤ 0.002 (stable) | 7.97% | 96.6% |
+| Simulated downturn (70% of applicants: external scores −25%, repayment burden +30%, late payments ×2) | 0.19 (investigate) | external scores 0.29–0.56 (ALERT) | 10.67% | 94.3% |
+
+**Finding.** Input drift crossed the alert threshold before score drift did: monitoring the top features gives earlier warning than monitoring the score alone. No false alarms in the normal month.

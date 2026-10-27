@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 from src.config import load_config, project_path  # noqa: E402
 from src.db import connect, query_df  # noqa: E402
-from src.explain import BASE, champion_contributions, global_importance, readable, reason_codes  # noqa: E402
+from src.explain import BASE, binary_features, champion_contributions, global_importance, readable, reason_codes  # noqa: E402
 from src.fairness import age_groups, fairness_flags, group_metrics  # noqa: E402
 from src.model_card import render  # noqa: E402
 from src.model_data import ID_COL, holdout_halves, holdout_split, load_model_table, training_rows  # noqa: E402
@@ -80,12 +80,13 @@ def run(sample: bool = False, tracking: bool = True) -> dict:
 
     typical = X_all.iloc[train_idx].median(numeric_only=True)
     categories = {c: encoder.categories_[c] for c in encoder.columns}
+    binary = binary_features(X_all.iloc[train_idx].drop(columns=list(encoder.columns)))
     declined = np.flatnonzero(~approved)
     approved_pos = np.flatnonzero(approved)
     n_extra = max(0, min(ecfg["sample_size"] - len(declined), len(approved_pos)))
     chosen = np.sort(np.concatenate([declined, rng.choice(approved_pos, n_extra, replace=False)]))
     reasons = reason_codes(contrib.iloc[chosen], X_test.iloc[chosen], typical, labels,
-                           top_k=ecfg["top_reasons"], categories=categories)
+                           top_k=ecfg["top_reasons"], categories=categories, binary=binary)
     reasons.insert(0, ID_COL, ids[chosen])
     reasons.insert(1, "pd", np.round(pd_test[chosen], 4))
     reasons.insert(2, "band", bands[chosen])
@@ -97,7 +98,8 @@ def run(sample: bool = False, tracking: bool = True) -> dict:
     if len(declined):
         example = declined[np.argsort(pd_test[declined])[len(declined) // 2]]  # median-risk decline
     example_reasons = (reason_codes(contrib.iloc[[example]], X_test.iloc[[example]], typical, labels,
-                                    top_k=ecfg["top_reasons"], categories=categories).iloc[0].tolist()
+                                    top_k=ecfg["top_reasons"], categories=categories,
+                                    binary=binary).iloc[0].tolist()
                        if example is not None else [])
 
     # ---------- 2. fairness ----------

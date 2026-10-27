@@ -17,6 +17,11 @@ joblib>=1.3
 # Stage 3: charts
 matplotlib>=3.8
 
+# Stage 5: scoring API
+fastapi>=0.110
+uvicorn>=0.29
+httpx>=0.27        # FastAPI's test client
+
 # Data download
 kaggle>=1.6   # works with kaggle.json keys; new-style API tokens need 1.8+ (Python 3.11+)
 

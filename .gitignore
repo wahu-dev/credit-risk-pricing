@@ -22,6 +22,11 @@ reports/pricing/*.json
 reports/audit_sample/
 reports/audit/*.csv
 reports/audit/*.json
+reports/monitoring_sample/
+reports/monitoring/*.csv
+
+# API score log (scored applicants) never goes to Git
+logs/
 
 # Fitted models and experiment-tracking store (re-created by training)
 models/

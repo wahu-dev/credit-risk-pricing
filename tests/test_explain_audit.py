@@ -79,6 +79,31 @@ def test_categorical_reasons_use_category_names():
     assert out.iloc[0]["reason_1"] == "Income type is 'Pensioner'"
 
 
+def test_flags_read_yes_no_and_typical_values_are_not_reasons():
+    contrib = pd.DataFrame({"late_flag": [0.5], "ratio": [0.4], "years": [0.3], "debt": [0.2], BASE: [0.0]})
+    X = pd.DataFrame({"late_flag": [1.0], "ratio": [0.14001], "years": [4.6], "debt": [0.9]})
+    typical = pd.Series({"late_flag": 0.0, "ratio": 0.14, "years": 4.51, "debt": 0.4})
+    out = reason_codes(contrib, X, typical, {"late_flag": "Late payment in last 12 months"},
+                       top_k=3, binary={"late_flag"})
+    # ratio (rounds to typical) and years (within 5% of typical) are skipped,
+    # so the next genuine factor, debt, moves up
+    assert out.iloc[0].tolist() == ["Late payment in last 12 months: yes",
+                                    "Debt is higher than typical (0.90 vs 0.40)", ""]
+
+
+def test_a_typical_applicant_gets_no_reasons():
+    contrib = pd.DataFrame({"years": [0.2], "flag": [0.1], BASE: [0.0]})
+    X = pd.DataFrame({"years": [4.51], "flag": [0.0]})
+    out = reason_codes(contrib, X, pd.Series({"years": 4.51, "flag": 0.0}), {}, top_k=3, binary={"flag"})
+    assert out.iloc[0].tolist() == ["", "", ""]
+
+
+def test_binary_feature_detection():
+    from src.explain import binary_features
+    X = pd.DataFrame({"flag": [0, 1, 1], "flag_with_gaps": [0.0, np.nan, 1.0], "count": [0, 2, 1]})
+    assert binary_features(X) == {"flag", "flag_with_gaps"}
+
+
 def test_global_importance_shares_sum_to_one():
     contrib = pd.DataFrame({"a": [1.0, -1.0], "b": [0.1, 0.1], BASE: [0, 0]})
     imp = global_importance(contrib, {})

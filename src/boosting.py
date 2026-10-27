@@ -16,7 +16,6 @@ import logging
 from typing import Callable
 
 import lightgbm as lgb
-import optuna
 import pandas as pd
 import xgboost as xgb
 from sklearn.metrics import roc_auc_score
@@ -97,6 +96,8 @@ def tune(kind: str, X_tr: pd.DataFrame, y_tr, X_va: pd.DataFrame, y_va, *, n_tri
          timeout: int | None, seed: int, max_estimators: int, patience: int,
          on_trial: Callable[[int, dict, float, int], None] | None = None) -> dict:
     """Bayesian search (Optuna TPE) for the best hyperparameters by validation AUC."""
+    import optuna  # imported here so the serving image does not need it
+
     optuna.logging.set_verbosity(optuna.logging.WARNING)
     space = SEARCH_SPACES[kind]
 

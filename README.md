@@ -1,9 +1,8 @@
 # Credit Risk Scoring & Risk-Based Loan Pricing
 
-> **Status: stage 1 of 5 complete** — SQL feature pipeline, data validation and an interpretable baseline scorecard.
-> Headline results and the demo video will be added as later stages land.
+> **Status: complete.** SQL feature pipeline, tuned LightGBM + XGBoost ensemble (+0.036 AUC vs scorecard), calibrated risk-based pricing, TreeSHAP reason codes, fairness audit, model card, FastAPI service with drift monitoring, Docker and CI.
 
-![CI](https://github.com/<your-username>/credit-risk-pricing/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/wahu-dev/credit-risk-pricing/actions/workflows/ci.yml/badge.svg)
 
 ## Business problem
 
@@ -71,6 +70,37 @@ Fairness audit on 30,752 unseen applicants: every gender and age group passes th
 
 ![Fairness](reports/audit/fairness.png)
 
+## Scoring API and monitoring (stage 5)
+
+A FastAPI service turns the models into a lending decision engine: send an applicant's features, get back their **probability of default, risk band, approve/decline, interest rate and top three reasons**.
+
+```bash
+python -m src.build_serving          # package models, calibrator, price grid
+uvicorn src.api:app --port 8000      # then open http://127.0.0.1:8000/docs
+```
+
+Example response for a declined applicant:
+
+```json
+{
+  "pd": 0.50,
+  "risk_band": "G",
+  "decision": "decline",
+  "interest_rate": null,
+  "reasons": [
+    "External credit score (average) is lower than typical (0.05 vs 0.52)",
+    "External credit score 2 is lower than typical (0.05 vs 0.57)",
+    "Share of instalments paid late is higher than typical (0.60 vs 0.00)"
+  ]
+}
+```
+
+**Drift monitoring.** `python -m src.monitor --simulate` compares new applicants with the validation population using the Population Stability Index. A normal month stays stable (PSI about 0.001); a simulated downturn triggers alerts on the external credit scores (PSI up to 0.56) before the score itself crosses the alert line.
+
+![Drift monitoring](reports/monitoring/psi_simulation.png)
+
+**Docker.** `docker build -t credit-risk-api .` then `docker run -p 8000:8000 credit-risk-api`. The image pins the exact library versions that trained the models; CI builds it and calls the running container on every push.
+
 ## Roadmap
 
 1. ✅ SQL features, validation, interpretable baseline
@@ -78,7 +108,7 @@ Fairness audit on 30,752 unseen applicants: every gender and age group passes th
 3. ✅ Calibration, risk-based pricing grid and profit-vs-approval curve
 4. Champion vs challenger Bayesian A/B test
 5. ✅ SHAP reasons, fairness report, model card
-6. FastAPI scoring service, Docker, monitoring (PSI)
+6. ✅ FastAPI scoring service, Docker, monitoring (PSI)
 
 ## How to run
 
@@ -86,10 +116,18 @@ Fairness audit on 30,752 unseen applicants: every gender and age group passes th
 python -m venv .venv
 .venv\Scripts\activate          # Windows  (macOS/Linux: source .venv/bin/activate)
 pip install -r requirements.txt
+pytest                           # 93 tests
 
-python -m src.pipeline --sample  # 10-second run on synthetic data
-python -m src.pipeline           # full run on Kaggle data (needs a Kaggle API key)
-pytest                           # tests
+# Full pipeline on the real data (needs a Kaggle API key)
+python -m src.pipeline           # 1. SQL features, validation, baseline scorecard
+python -m src.train_models       # 2. tuned LightGBM + XGBoost ensemble (about 40 min)
+python -m src.price_loans        # 3. calibration and risk-based pricing
+python -m src.explain_and_audit  # 4. reason codes, fairness audit, model card
+python -m src.build_serving      # 5. package for the API
+python -m src.monitor --simulate #    drift monitoring demo
+uvicorn src.api:app --port 8000  #    scoring API
+
+# Every step also runs on synthetic data in seconds: add --sample
 ```
 
 ## Project structure
