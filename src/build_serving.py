@@ -32,8 +32,10 @@ from src.scoring import champion_probability, load_bundle
 
 log = logging.getLogger("build_serving")
 
-SERVING_PACKAGES = ["numpy", "pandas", "scikit-learn", "scipy", "lightgbm", "xgboost", "joblib",
-                    "pyyaml", "fastapi", "uvicorn", "pydantic"]
+# pyarrow is needed to *load* the bundle: pandas 3 stores text columns (e.g. the
+# price grid's band names) with pyarrow, so unpickling them requires it.
+SERVING_PACKAGES = ["numpy", "pandas", "pyarrow", "scikit-learn", "scipy", "lightgbm", "xgboost",
+                    "joblib", "pyyaml", "fastapi", "uvicorn", "pydantic"]
 REFERENCE_SIZE = 20_000
 N_MONITORED = 8
 
