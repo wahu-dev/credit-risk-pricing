@@ -1,0 +1,14 @@
+# Core data + modelling
+duckdb>=1.1,<2
+pandas>=2.2,<4
+numpy>=1.26,<3
+scikit-learn>=1.5,<2
+statsmodels>=0.14,<1
+pyarrow>=16
+pyyaml>=6
+
+# Data download
+kaggle>=1.6
+
+# Testing
+pytest>=8

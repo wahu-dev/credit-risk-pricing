@@ -1,0 +1,53 @@
+# All tunable settings live here, not in code.
+# Change a value here and re-run; no code edits needed.
+
+project:
+  random_seed: 42
+
+data:
+  kaggle_competition: home-credit-default-risk
+  raw_dir: data/raw            # real Kaggle CSVs
+  sample_dir: data/sample      # small synthetic CSVs (for CI and quick tests)
+  warehouse_path: data/warehouse.duckdb
+  processed_dir: data/processed
+  # Tables loaded into the warehouse: table name -> CSV file name
+  tables:
+    application_train: application_train.csv
+    application_test: application_test.csv
+    bureau: bureau.csv
+    bureau_balance: bureau_balance.csv
+    previous_application: previous_application.csv
+    installments_payments: installments_payments.csv
+
+features:
+  sql_dir: sql/features
+  model_table: model_table
+  # Kept OUT of the model on purpose (fairness + EU AI Act / GDPR).
+  # They live in their own table and are used only for fairness checks.
+  protected_attributes: [gender, age_years]
+
+validation:
+  max_missing_share: 0.95      # fail if a feature is >95% missing
+  min_rows: 100
+
+baseline:
+  test_size: 0.2
+  winsor_quantiles: [0.01, 0.99]
+  # Interpretable scorecard baseline. Expected sign = direction we expect
+  # each feature to push default risk. A mismatch is flagged, not hidden.
+  features:
+    ext_source_mean: negative
+    ext_source_2: negative
+    ext_source_3: negative
+    credit_to_goods_ratio: positive
+    annuity_to_income_ratio: positive
+    credit_to_annuity_ratio: positive
+    years_employed: negative
+    bureau_debt_to_credit: positive
+    bureau_worst_dpd_12m: positive
+    prev_refusal_rate: positive
+    inst_late_rate: positive
+    inst_late_rate_365d: positive
+    thin_file: positive
+
+reports_dir: reports
