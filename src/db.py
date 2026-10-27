@@ -24,12 +24,16 @@ def safe_identifier(name: str) -> str:
     return name
 
 
-def connect(path: str | Path | None = None) -> duckdb.DuckDBPyConnection:
+def connect(path: str | Path | None = None, read_only: bool = False) -> duckdb.DuckDBPyConnection:
     """Open (or create) the warehouse file. None gives an in-memory database,
-    which the tests use."""
+    which the tests use. read_only=True for stages that only read from it."""
     if path is None:
         return duckdb.connect()
     path = Path(path)
+    if read_only:
+        if not path.exists():
+            raise FileNotFoundError(f"{path} not found. Run `python -m src.pipeline` first.")
+        return duckdb.connect(str(path), read_only=True)
     path.parent.mkdir(parents=True, exist_ok=True)
     return duckdb.connect(str(path))
 

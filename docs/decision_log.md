@@ -103,3 +103,29 @@ they become unstable.
 | 90% | 5.82% | 6.16% | 31 | 10.3 million |
 
 **Caveats.** TARGET means payment difficulties (a default proxy); one-period pricing with a single LGD; customers assumed to accept the price; amounts in the dataset's currency units.
+
+---
+
+## 2026-10-27 · Stage 4: reason codes, fairness audit and model card
+
+**Setup.** Stage-3 test half (30,752 applicants never used for training, selection, calibration or pricing), with the stage-3 price grid applied. Reason codes from native TreeSHAP (LightGBM and XGBoost), averaged in log-odds for the ensemble. Fairness measured by gender and age group from the separate protected-attributes table; the model never sees these attributes.
+
+**Approval rates.** Every group passes the four-fifths rule (adverse impact ratio at least 0.8). No approval-rate warning.
+
+**Calibration gaps above 1 point:**
+
+| Group | Predicted PD | Actual default rate | Effect on price |
+| --- | --- | --- | --- |
+| Men | 9.0% | 10.3% | slightly underpriced |
+| Under 25 | 13.9% | 12.1% | slightly overpriced |
+| 25–34 | 10.7% | 9.6% | slightly overpriced |
+| 35–44 | 7.7% | 8.8% | slightly underpriced |
+
+**Ranking quality.** Lower AUC for under-25s (0.717) and over-55s (0.728) than the best group (0.791): thin credit files for the young, pension and employment placeholders for the old.
+
+**Interpretation.** Excluding protected attributes ("fairness through unawareness") does not equalise calibration across groups: men default more often in this data, and a model that cannot see gender averages them with women.
+
+**Decision.**
+- Do **not** adjust scores or prices using gender or age: that would make protected attributes pricing inputs.
+- Document the gaps in the model card and monitor them quarterly.
+- Next improvements: find which features act as proxies for the gaps, and add alternative data (e.g. mobile-money history) for thin-file young applicants.

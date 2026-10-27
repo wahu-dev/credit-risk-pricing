@@ -61,13 +61,23 @@ At the same price and 80% approval, the champion approves a portfolio with a 4.5
 
 ![Profit vs approval](reports/pricing/profit_vs_approval.png)
 
+## Explainability and fairness (stage 4)
+
+Every score comes with its top three reasons, computed with TreeSHAP. Example: why one applicant was declined.
+
+![Example decline](reports/audit/example_decline.png)
+
+Fairness audit on 30,752 unseen applicants: every gender and age group passes the four-fifths rule on approval rates. Small calibration gaps (1–1.7 points) and lower ranking accuracy for the youngest and oldest groups are documented and monitored, not corrected with protected attributes. Full details in the **[model card](docs/model_card.md)**.
+
+![Fairness](reports/audit/fairness.png)
+
 ## Roadmap
 
 1. ✅ SQL features, validation, interpretable baseline
 2. ✅ Gradient boosting + stacking, Optuna tuning, MLflow tracking, calibration
 3. ✅ Calibration, risk-based pricing grid and profit-vs-approval curve
 4. Champion vs challenger Bayesian A/B test
-5. SHAP reasons, fairness report, model card
+5. ✅ SHAP reasons, fairness report, model card
 6. FastAPI scoring service, Docker, monitoring (PSI)
 
 ## How to run

@@ -90,6 +90,57 @@ pricing:
   approval_rates: {start: 0.30, stop: 1.00, step: 0.05}
   compare_at: [0.70, 0.80, 0.90]  # approval rates for champion vs scorecard
 
+# Stage 4: reason codes, fairness report, model card
+explain:
+  top_reasons: 3
+  sample_size: 2000             # reason codes saved for all declines + a random sample of approvals
+  labels:                       # plain-language names used in reason codes and charts
+    ext_source_mean: External credit score (average)
+    ext_source_1: External credit score 1
+    ext_source_2: External credit score 2
+    ext_source_3: External credit score 3
+    ext_source_count: Number of external credit scores available
+    credit_to_annuity_ratio: Loan amount relative to repayment (term)
+    credit_to_goods_ratio: Loan amount relative to goods price
+    credit_to_income_ratio: Loan amount relative to income
+    annuity_to_income_ratio: Repayment relative to income
+    years_employed: Years in current employment
+    employment_placeholder_flag: No employment record (e.g. pensioner)
+    years_since_id_change: Years since ID document change
+    income_total: Income
+    credit_amount: Loan amount
+    annuity_amount: Repayment amount
+    goods_price: Price of goods financed
+    region_rating: Region rating
+    income_type: Income type
+    education_type: Education level
+    bureau_debt_to_credit: Debt used on active bureau credit
+    bureau_active_count: Number of active bureau loans
+    bureau_loan_count: Number of bureau loans
+    bureau_days_since_last_credit: Days since last bureau credit
+    bureau_any_late_12m: Late bureau payment in last 12 months
+    bureau_balance_missing: No monthly bureau records
+    bureau_max_overdue_amount: Largest overdue amount at bureau
+    prev_refusal_rate: Share of previous applications refused
+    prev_last_was_refused: Most recent previous application refused
+    prev_avg_granted_to_requested: Share of requested amount granted before
+    prev_days_since_last_decision: Days since last previous application
+    inst_late_rate: Share of instalments paid late
+    inst_late_rate_365d: Share of instalments paid late (last 12 months)
+    inst_avg_days_late: Average days late on instalments
+    inst_max_days_late: Most days late on an instalment
+    inst_underpaid_rate: Share of instalments underpaid
+    thin_file: No credit history (thin file)
+
+fairness:
+  age_bins:   [0, 25, 35, 45, 55, 120]
+  age_labels: ["under 25", "25-34", "35-44", "45-54", "55+"]
+  min_group_size: 300            # smaller groups are listed but not judged
+  thresholds:
+    adverse_impact_ratio: 0.8    # four-fifths rule for approval rates
+    calibration_gap: 0.01        # predicted vs actual default rate, 1 point
+    auc_gap: 0.03                # ranking quality vs the best group
+
 tracking:
   enabled: true
   experiment: credit-risk-stage2

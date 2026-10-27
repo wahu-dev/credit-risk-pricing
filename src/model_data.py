@@ -42,6 +42,15 @@ def holdout_split(y: pd.Series, test_size: float, seed: int) -> tuple[np.ndarray
     return np.sort(train_idx), np.sort(holdout_idx)
 
 
+def holdout_halves(y_holdout, calibration_share: float, seed: int) -> tuple[np.ndarray, np.ndarray]:
+    """Positions (within the holdout) of the calibration half and the test half.
+    Stages 3 and 4 both call this, so they use exactly the same test applicants."""
+    positions = np.arange(len(y_holdout))
+    cal, test = train_test_split(positions, test_size=1 - calibration_share,
+                                 stratify=np.asarray(y_holdout), random_state=seed)
+    return cal, test
+
+
 def feature_columns(table: pd.DataFrame, categorical: list[str]) -> list[str]:
     """All numeric columns (except id, target, is_train) plus the categoricals."""
     numeric = [c for c in table.select_dtypes(include=[np.number]).columns if c not in NON_FEATURES]

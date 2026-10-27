@@ -18,14 +18,13 @@ import joblib
 import matplotlib
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
 
 matplotlib.use("Agg")  # draw charts to files, no window needed
 import matplotlib.pyplot as plt  # noqa: E402
 
 from src.calibration import Calibrator, calibration_metrics, calibration_table, choose_method  # noqa: E402
 from src.config import load_config, project_path  # noqa: E402
-from src.model_data import holdout_split, load_model_table, training_rows  # noqa: E402
+from src.model_data import holdout_halves, holdout_split, load_model_table, training_rows  # noqa: E402
 from src.pricing import (PricingAssumptions, apply_grid, band_performance, build_grid,  # noqa: E402
                          profit_curve, required_rate)
 from src.scoring import champion_probability, load_bundle, member_predictions  # noqa: E402
@@ -56,8 +55,7 @@ def run(sample: bool = False, tracking: bool = True) -> dict:
         "champion": champion_probability(bundle, X_ho),
         "scorecard": member_predictions(bundle, X_ho)["scorecard"].to_numpy(),
     }
-    cal_idx, test_idx = train_test_split(np.arange(len(y_ho)), test_size=1 - pcfg["calibration_share"],
-                                         stratify=y_ho, random_state=seed)
+    cal_idx, test_idx = holdout_halves(y_ho, pcfg["calibration_share"], seed)
     log.info("Holdout %s applicants: %s to calibrate and price, %s to test",
              f"{len(y_ho):,}", f"{len(cal_idx):,}", f"{len(test_idx):,}")
 

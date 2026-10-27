@@ -35,3 +35,6 @@ jobs:
 
       - name: Stage 3 smoke test (calibration and pricing on synthetic data)
         run: python -m src.price_loans --sample --no-tracking
+
+      - name: Stage 4 smoke test (reason codes, fairness, model card on synthetic data)
+        run: python -m src.explain_and_audit --sample --no-tracking
