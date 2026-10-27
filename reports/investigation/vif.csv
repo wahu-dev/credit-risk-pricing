@@ -1,0 +1,14 @@
+feature,vif,r2_vs_others
+ext_source_mean,5.82,0.8282
+ext_source_2,3.82,0.7385
+ext_source_3,2.65,0.6221
+inst_late_rate,1.33,0.2467
+inst_late_rate_365d,1.32,0.2421
+credit_to_annuity_ratio,1.05,0.0494
+prev_refusal_rate,1.05,0.047
+bureau_debt_to_credit,1.04,0.0352
+credit_to_goods_ratio,1.03,0.0262
+bureau_worst_dpd_12m,1.03,0.0287
+years_employed,1.03,0.0302
+annuity_to_income_ratio,1.02,0.0181
+thin_file,1.01,0.006

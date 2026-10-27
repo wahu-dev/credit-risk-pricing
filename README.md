@@ -46,7 +46,7 @@ _To be summarised here after the full run._
 
 | Model | ROC-AUC | Gini | KS | PR-AUC |
 | --- | --- | --- | --- | --- |
-| Baseline logit (13 features) | — | — | — | — |
+| Baseline logit (13 features) | 0.740 | 0.479 | 0.360 | 0.221 |
 
 ## Roadmap
 

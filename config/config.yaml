@@ -41,10 +41,15 @@ baseline:
     ext_source_3: negative
     credit_to_goods_ratio: positive
     annuity_to_income_ratio: positive
-    credit_to_annuity_ratio: positive
+    # credit_to_annuity_ratio removed: default rate zigzags across its range
+    # (likely encodes the lender's product/price points), so one linear
+    # coefficient is meaningless. Kept in the model table for tree models.
     years_employed: negative
     bureau_debt_to_credit: positive
-    bureau_worst_dpd_12m: positive
+    # bureau_worst_dpd_12m replaced: 71% missing and filled with 0 mixed
+    # "unknown" with "never late"; the signal is any-arrears vs none.
+    bureau_any_late_12m: positive
+    bureau_balance_missing: positive   # unknown defaults slightly above "never late"
     prev_refusal_rate: positive
     inst_late_rate: positive
     inst_late_rate_365d: positive

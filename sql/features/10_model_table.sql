@@ -21,7 +21,11 @@ SELECT
     b.bureau_days_since_last_credit,
     b.bureau_latest_loan_active,
     b.bureau_worst_dpd_12m,
+    b.bureau_any_late_12m,
     b.bureau_late_month_share_12m,
+    -- 71% of applicants have no monthly bureau records. This flag lets a model
+    -- treat "unknown" differently from "always paid on time".
+    CASE WHEN b.bureau_any_late_12m IS NULL THEN 1 ELSE 0 END AS bureau_balance_missing,
 
     -- Previous applications with this lender
     COALESCE(p.prev_app_count, 0)             AS prev_app_count,

@@ -49,6 +49,12 @@ per_applicant AS (
         MAX(CASE WHEN r.recency_rank = 1 AND r.CREDIT_ACTIVE = 'Active'
                  THEN 1 ELSE 0 END)                                      AS bureau_latest_loan_active,
         MAX(bal.worst_dpd_bucket)                                        AS bureau_worst_dpd_12m,
+        -- Investigation showed the signal is "any arrears vs none", not severity:
+        -- buckets 2-5 are rare (<1% of applicants) and no riskier than bucket 1.
+        -- 1 = any late month, 0 = monthly records exist and all on time,
+        -- NULL = no monthly records (unknown, kept separate from 0).
+        MAX(CASE WHEN bal.worst_dpd_bucket >= 1 THEN 1
+                 WHEN bal.worst_dpd_bucket = 0 THEN 0 END)               AS bureau_any_late_12m,
         AVG(bal.late_month_share)                                        AS bureau_late_month_share_12m
     FROM ranked_loans r
     LEFT JOIN balance_12m bal

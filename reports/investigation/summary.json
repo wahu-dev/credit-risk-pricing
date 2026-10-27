@@ -1,0 +1,26 @@
+{
+  "credit_to_annuity_ratio": {
+    "expected_direction": "positive",
+    "direction_in_model": "negative",
+    "auc_alone": 0.4679,
+    "direction_alone": "negative",
+    "strength_alone": 0.0641,
+    "trend_across_bands": "mixed / not monotonic",
+    "missing_share": 0.0,
+    "default_rate_missing": 0.0,
+    "default_rate_known": 0.0807,
+    "median_used_for_missing": 20.0
+  },
+  "bureau_worst_dpd_12m": {
+    "expected_direction": "positive",
+    "direction_in_model": "negative",
+    "auc_alone": 0.5414,
+    "direction_alone": "positive",
+    "strength_alone": 0.0829,
+    "trend_across_bands": "mixed / not monotonic",
+    "missing_share": 0.7071,
+    "default_rate_missing": 0.0803,
+    "default_rate_known": 0.0817,
+    "median_used_for_missing": 0.0
+  }
+}

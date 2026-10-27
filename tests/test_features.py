@@ -67,6 +67,15 @@ def test_bureau_balance_uses_last_12_months_only(model_table):
     assert r["bureau_late_month_share_12m"] == pytest.approx(0.25)
 
 
+def test_any_arrears_flag_separates_unknown_from_clean(model_table):
+    r1 = _row(model_table, 1)
+    assert r1["bureau_any_late_12m"] == 1        # a bucket-2 month inside 12m
+    assert r1["bureau_balance_missing"] == 0
+    r3 = _row(model_table, 3)                      # no bureau history at all
+    assert _is_null(r3["bureau_any_late_12m"])     # unknown, NOT "never late"
+    assert r3["bureau_balance_missing"] == 1
+
+
 def test_previous_applications(model_table):
     r = _row(model_table, 1)
     assert r["prev_app_count"] == 2
